@@ -1,19 +1,58 @@
 <script>
 
-import { ref } from 'vue';
+import { onMounted, ref } from 'vue';
+import axios from 'axios';
 
 export default {
 
   setup(){
-
-    const url = ref('asdasd');
+    const endpoint = 'https://api-ssl.bitly.com/v4/shorten';
+    const token = '71c9a899ed0dc44a8876f6833cbeffb7847f7f31';
+    let guid = '';
+    const url = ref('');
+    const shortened_url = ref('');
 
     function shorten(){
-      let shortened_url = url.value;
+      //  shortened_url.value = 
+       axios.post(endpoint, {
+          "group_guid": guid,
+          "domain": "bit.ly",
+          "long_url": url.value
+        },
+        {
+        headers: {
+            "Authorization": `Bearer ${token}`
+          }
+        }).then((res) => {
+          // console.log(res.data)
+          shortened_url.value = res.data.link;
+        })
+        .catch((error) => {
+          console.error(error)
+        });
+
+        console.log(shortened_url);
     }
+
+    onMounted(() => {
+      axios.get('https://api-ssl.bitly.com/v4/groups',
+        {
+          headers: {
+              "Authorization": `Bearer ${token}`
+            }
+        }).then((res) => {
+          // console.log(res.data.groups[0].guid)
+          guid = res.data.groups[0].guid;
+        })
+        .catch((error) => {
+          console.error(error)
+        })
+    })
 
     return {
       url,
+      shorten,
+      shortened_url
     }
   }
 
@@ -24,10 +63,11 @@ export default {
 
 <template>
 
-  <p>test</p>
-
   <input v-model="url">
-  <button @click="shorten">shorten</button>
+  <button @click="shorten">Shorten</button>
+  <div v-if="shortened_url">
+    {{ shortened_url }}
+  </div>
 
 </template>
 
